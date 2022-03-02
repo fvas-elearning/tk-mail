@@ -1,6 +1,7 @@
 <?php
 namespace Tk\Mail;
 
+use Bs\Config;
 use \PHPMailer\PHPMailer\PHPMailer;
 
 /**
@@ -194,6 +195,12 @@ class Gateway
                         $this->mailer->addAddress($testEmail, 'Debug To');
                     }
                 }
+
+                if ($this->params['system.debug.email.authUser'] && class_exists('\Bs\Config') && Config::getInstance()->getAuthUser()) {
+                    $testEmail = Config::getInstance()->getAuthUser()->getEmail();
+                    $this->mailer->addAddress($testEmail, Config::getInstance()->getAuthUser()->getName());
+                }
+
                 $this->mailer->setFrom($testEmail, 'Debug From');
 
                 if (count($message->getCc())) {
@@ -229,8 +236,9 @@ class Gateway
             // Send Email
             $this->lastMessage = $message;
 
-            if (\Tk\Config::getInstance()->isDebug())
-                $this->mailer->SMTPDebug = 2;
+            // Note: can interfear with output buffer contents in AJAX calls, so enable when needed only
+//            if (\Tk\Config::getInstance()->isDebug())
+//                $this->mailer->SMTPDebug = 2;
 
             $this->lastSent = $this->mailer->send();
             if (!$this->lastSent)
